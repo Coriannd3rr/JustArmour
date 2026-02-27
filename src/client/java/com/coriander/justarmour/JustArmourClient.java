@@ -13,6 +13,7 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.item.ItemStack;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -28,6 +29,7 @@ public class JustArmourClient implements ClientModInitializer {
 
 	private static KeyBinding toggleHudKeybind;
 	private static KeyBinding openConfigScreenKeybind;
+	private static final KeyBinding.Category JUSTARMOUR_CATEGORY = KeyBinding.Category.create(Identifier.of("justarmour", "main"));
 
 	@Override
 	public void onInitializeClient() {
@@ -75,18 +77,18 @@ public class JustArmourClient implements ClientModInitializer {
 	private void registerKeybinds() {
 		// Toggle HUD keybind (G)
 		toggleHudKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"justarmourtoggleKey",
+				"key.justarmour.toggle",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_G,
-				"justarmour"
+				JUSTARMOUR_CATEGORY
 		));
 
 		// Config Screen keybind (J)
 		openConfigScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"justarmourconfigKey",
+				"key.justarmour.config",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_J,
-				"justarmour"
+				JUSTARMOUR_CATEGORY
 		));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -170,7 +172,7 @@ public class JustArmourClient implements ClientModInitializer {
 		// Calculate positions with scale
 		int iconX = config.durabilityOnRight ? x - (int)(10 * config.scale) : x + (int)(10 * config.scale);
 
-		// SCALE ITEMS AND TEXT using 1.21.8 matrix method
+		// SCALE ITEMS AND TEXT using 1.21.10 matrix method
 		context.getMatrices().pushMatrix();
 		context.getMatrices().scale(config.scale, config.scale);
 

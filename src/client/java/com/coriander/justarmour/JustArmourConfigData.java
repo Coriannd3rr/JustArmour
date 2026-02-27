@@ -29,7 +29,7 @@ public class JustArmourConfigData {
     public boolean hideDurabilityNumbers = false;
 
     // Scale/spacing
-    public int spacing = 18;
+    public int spacing = 17;
 
     // Scale/thickness (0.5 to 2.0)
     public float scale = 1.0f;
