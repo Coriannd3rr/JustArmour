@@ -12,7 +12,6 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.item.ItemStack;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EquipmentSlot;
 import org.lwjgl.glfw.GLFW;
 
@@ -23,253 +22,237 @@ import java.io.IOException;
 
 public class JustArmourClient implements ClientModInitializer {
 
-	public static JustArmourConfigData config;
-	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	private static final File configFile = new File(MinecraftClient.getInstance().runDirectory, "config/justarmour_config.json");
+    public static JustArmourConfigData config;
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final File configFile = new File(MinecraftClient.getInstance().runDirectory, "config/justarmour_config.json");
 
-	private static KeyBinding toggleHudKeybind;
-	private static KeyBinding openConfigScreenKeybind;
+    private static KeyBinding toggleHudKeybind;
+    private static KeyBinding openConfigScreenKeybind;
 
-	@Override
-	public void onInitializeClient() {
-		loadConfig();
+    @Override
+    public void onInitializeClient() {
+        loadConfig();
 
-		HudRenderCallback.EVENT.register((context, delta) -> {
-			// Set default position on first render if not set
-			if (config.hudX == -1 || config.hudY == -1) {
-				setDefaultPosition();
-			}
+        HudRenderCallback.EVENT.register((context, delta) -> {
+            // Set default position on first render if not set
+            if (config.hudX == -1 || config.hudY == -1) {
+                setDefaultPosition();
+            }
 
-			if (config.hudEnabled) {
-				renderArmorHUD(context, config.hudX, config.hudY);
-				renderHeldItemHUD(context);
-				renderOffhandItemHUD(context);
-			}
-		});
+            if (config.hudEnabled) {
+                renderArmorHUD(context, config.hudX, config.hudY);
+                renderHeldItemHUD(context);
+                renderOffhandItemHUD(context);
+            }
+        });
 
-		registerKeybinds();
-	}
+        registerKeybinds();
+    }
 
-	private void setDefaultPosition() {
-		MinecraftClient client = MinecraftClient.getInstance();
-		int screenWidth = client.getWindow().getScaledWidth();
-		int screenHeight = client.getWindow().getScaledHeight();
+    private void setDefaultPosition() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
 
-		// Calculate perfect bottom right position for armor
-		int rightMargin = config.durabilityOnRight ? 80 : 60;
-		int bottomMargin = 40;
+        // Calculate perfect bottom right position for armor
+        int rightMargin = config.durabilityOnRight ? 80 : 60;
+        int bottomMargin = 40;
 
-		config.hudX = screenWidth - rightMargin;
-		config.hudY = screenHeight - bottomMargin;
+        config.hudX = screenWidth - rightMargin;
+        config.hudY = screenHeight - bottomMargin;
 
-		// Set held item position below armor
-		config.heldItemX = config.hudX;
-		config.heldItemY = config.hudY + config.spacing;
+        // Set held item position below armor
+        config.heldItemX = config.hudX;
+        config.heldItemY = config.hudY + config.spacing;
 
-		// Set offhand item position to left of armor
-		config.offhandItemX = config.hudX - 80;
-		config.offhandItemY = config.hudY;
+        // Set offhand item position to left of armor
+        config.offhandItemX = config.hudX - 80;
+        config.offhandItemY = config.hudY;
 
-		saveConfig();
-	}
+        saveConfig();
+    }
 
-	private void registerKeybinds() {
-		// Toggle HUD keybind (G)
-		toggleHudKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.justarmour.toggle",
-				InputUtil.Type.KEYSYM,
-				GLFW.GLFW_KEY_G,
-				"category.justarmour"
-		));
+    private void registerKeybinds() {
+        // Toggle HUD keybind (G)
+        toggleHudKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.justarmour.toggle",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_G,
+                "category.justarmour"
+        ));
 
-		// Config Screen keybind (J)
-		openConfigScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"key.justarmour.config",
-				InputUtil.Type.KEYSYM,
-				GLFW.GLFW_KEY_J,
-				"category.justarmour"
-		));
+        // Config Screen keybind (J)
+        openConfigScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.justarmour.config",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_J,
+                "category.justarmour"
+        ));
 
-		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			// Toggle HUD
-			while (toggleHudKeybind.wasPressed()) {
-				config.hudEnabled = !config.hudEnabled;
-				saveConfig();
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Toggle HUD
+            while (toggleHudKeybind.wasPressed()) {
+                config.hudEnabled = !config.hudEnabled;
+                saveConfig();
 
-				if (client.player != null) {
-					String message = "Armor HUD " + (config.hudEnabled ? "on" : "off");
-					client.player.sendMessage(Text.literal(message), false);
-				}
-			}
+                if (client.player != null) {
+                    String message = "Armor HUD " + (config.hudEnabled ? "on" : "off");
+                    client.player.sendMessage(Text.literal(message), false);
+                }
+            }
 
-			// Open Config Screen
-			while (openConfigScreenKeybind.wasPressed()) {
-				if (client.player != null) {
-					client.setScreen(new TransparentConfigScreen());
-				}
-			}
-		});
-	}
+            // Open Config Screen
+            while (openConfigScreenKeybind.wasPressed()) {
+                if (client.player != null) {
+                    client.setScreen(new TransparentConfigScreen());
+                }
+            }
+        });
+    }
 
-	public static void renderArmorHUD(DrawContext context, int baseX, int baseY) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || client.options.hudHidden) return;
+    public static void renderArmorHUD(DrawContext context, int baseX, int baseY) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.options.hudHidden) return;
 
-		MatrixStack matrices = context.getMatrices();
-		matrices.push();
+        int y = baseY;
 
-		// Apply scale
-		matrices.translate(baseX, baseY, 0);
-		matrices.scale(config.scale, config.scale, 1.0f);
-		matrices.translate(-baseX, -baseY, 0);
+        // Get armor slots in order: boots, leggings, chestplate, helmet
+        EquipmentSlot[] armorSlots = {
+                EquipmentSlot.FEET,
+                EquipmentSlot.LEGS,
+                EquipmentSlot.CHEST,
+                EquipmentSlot.HEAD
+        };
 
-		int y = baseY;
+        // Render armor pieces
+        for (EquipmentSlot slot : armorSlots) {
+            ItemStack stack = client.player.getEquippedStack(slot);
+            if (!stack.isEmpty()) {
+                renderArmorPiece(context, stack, baseX, y);
+            }
+            y -= (int)(config.spacing * config.scale);
+        }
+    }
 
-		// Get armor slots in order: boots, leggings, chestplate, helmet
-		EquipmentSlot[] armorSlots = {
-				EquipmentSlot.FEET,
-				EquipmentSlot.LEGS,
-				EquipmentSlot.CHEST,
-				EquipmentSlot.HEAD
-		};
+    public static void renderHeldItemHUD(DrawContext context) {
+        if (!config.showHeldItem) return;
 
-		// Render armor pieces
-		for (EquipmentSlot slot : armorSlots) {
-			ItemStack stack = client.player.getEquippedStack(slot);
-			if (!stack.isEmpty()) {
-				renderArmorPiece(context, stack, baseX, y);
-			}
-			y -= config.spacing;
-		}
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.options.hudHidden) return;
 
-		matrices.pop();
-	}
+        ItemStack heldItem = client.player.getMainHandStack();
+        if (heldItem.isEmpty()) return;
 
-	public static void renderHeldItemHUD(DrawContext context) {
-		if (!config.showHeldItem) return;
+        // Show all items if enabled, otherwise only damageable
+        if (!config.showAllHeldItems && !heldItem.isDamageable()) return;
 
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || client.options.hudHidden) return;
+        renderArmorPiece(context, heldItem, config.heldItemX, config.heldItemY);
+    }
 
-		ItemStack heldItem = client.player.getMainHandStack();
-		if (heldItem.isEmpty()) return;
+    public static void renderOffhandItemHUD(DrawContext context) {
+        if (!config.showOffhandItem) return;
 
-		// Show all items if enabled, otherwise only damageable
-		if (!config.showAllHeldItems && !heldItem.isDamageable()) return;
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.options.hudHidden) return;
 
-		MatrixStack matrices = context.getMatrices();
-		matrices.push();
+        ItemStack offhandItem = client.player.getOffHandStack();
+        if (offhandItem.isEmpty()) return;
 
-		matrices.translate(config.heldItemX, config.heldItemY, 0);
-		matrices.scale(config.scale, config.scale, 1.0f);
-		matrices.translate(-config.heldItemX, -config.heldItemY, 0);
+        // Show all items if enabled, otherwise only damageable
+        if (!config.showAllHeldItems && !offhandItem.isDamageable()) return;
 
-		renderArmorPiece(context, heldItem, config.heldItemX, config.heldItemY);
+        renderArmorPiece(context, offhandItem, config.offhandItemX, config.offhandItemY);
+    }
 
-		matrices.pop();
-	}
+    private static void renderArmorPiece(DrawContext context, ItemStack stack, int x, int y) {
+        MinecraftClient client = MinecraftClient.getInstance();
 
-	public static void renderOffhandItemHUD(DrawContext context) {
-		if (!config.showOffhandItem) return;
+        int iconX = config.durabilityOnRight ? x - (int)(10 * config.scale) : x + (int)(10 * config.scale);
 
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || client.options.hudHidden) return;
+        // SCALE ITEMS AND TEXT
+        // SCALE ITEMS AND TEXT
+        context.getMatrices().pushMatrix();
+        context.getMatrices().scale(config.scale, config.scale);  // Only 2 parameters!
 
-		ItemStack offhandItem = client.player.getOffHandStack();
-		if (offhandItem.isEmpty()) return;
+        int scaledIconX = (int)(iconX / config.scale);
+        int scaledY = (int)(y / config.scale);
 
-		// Show all items if enabled, otherwise only damageable
-		if (!config.showAllHeldItems && !offhandItem.isDamageable()) return;
+        // Draw item with vanilla durability bar if enabled
+        if (config.showDurabilityBar) {
+            context.drawItem(stack, scaledIconX, scaledY);
+            context.drawStackOverlay(client.textRenderer, stack, scaledIconX, scaledY);
+        } else {
+            // Draw item without bar
+            context.drawItem(stack, scaledIconX, scaledY);
+        }
 
-		MatrixStack matrices = context.getMatrices();
-		matrices.push();
+        // Don't render durability text if hidden or item isn't damageable
+        if (!config.hideDurabilityNumbers && stack.isDamageable()) {
+            int durability = stack.getMaxDamage() - stack.getDamage();
+            int max = stack.getMaxDamage();
+            int color;
 
-		matrices.translate(config.offhandItemX, config.offhandItemY, 0);
-		matrices.scale(config.scale, config.scale, 1.0f);
-		matrices.translate(-config.offhandItemX, -config.offhandItemY, 0);
+            // Color logic with ARGB format
+            if (config.disableColors) {
+                color = 0xFFFFFFFF;
+            } else {
+                if (durability == max) {
+                    color = 0xFF55FF55;
+                } else if (durability == max - 1) {
+                    color = 0xFFFFFFFF;
+                } else if (durability <= 71) {
+                    color = 0xFFFF5555;
+                } else if (durability <= 149) {
+                    color = 0xFFFFA500;
+                } else if (durability <= 281) {
+                    color = 0xFFFFFF55;
+                } else {
+                    color = 0xFFFFFFFF;
+                }
+            }
 
-		renderArmorPiece(context, offhandItem, config.offhandItemX, config.offhandItemY);
+            String text = config.showMaxDamage ? durability + "/" + max : String.valueOf(durability);
+            int textWidth = client.textRenderer.getWidth(text);
 
-		matrices.pop();
-	}
+            int textX;
+            if (config.durabilityOnRight) {
+                textX = (int)((x + 10) / config.scale);
+            } else {
+                textX = (int)((x - textWidth - 10) / config.scale) + 16;
+            }
 
-	private static void renderArmorPiece(DrawContext context, ItemStack stack, int x, int y) {
-		MinecraftClient client = MinecraftClient.getInstance();
+            int textY = scaledY + 5;
 
-		int iconX = config.durabilityOnRight ? x - 10 : x + 10;
+            context.drawText(client.textRenderer, text, textX, textY, color, config.showShadow);
+        }
 
-		// Draw item with vanilla durability bar if enabled
-		if (config.showDurabilityBar) {
-			context.drawItem(stack, iconX, y);
-			context.drawStackOverlay(client.textRenderer, stack, iconX, y);
-		} else {
-			// Draw item without bar
-			context.drawItem(stack, iconX, y);
-		}
+        context.getMatrices().popMatrix();
+    }
 
-		// Don't render durability text if hidden or item isn't damageable
-		if (config.hideDurabilityNumbers || !stack.isDamageable()) return;
+    public static void loadConfig() {
+        try {
+            if (!configFile.exists()) {
+                config = new JustArmourConfigData();
+                saveConfig();
+                return;
+            }
+            FileReader reader = new FileReader(configFile);
+            config = gson.fromJson(reader, JustArmourConfigData.class);
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            config = new JustArmourConfigData();
+        }
+    }
 
-		int durability = stack.getMaxDamage() - stack.getDamage();
-		int max = stack.getMaxDamage();
-		int color;
-
-		// Color logic
-		if (config.disableColors) {
-			color = 0xFFFFFF;
-		} else {
-			if (durability == max) {
-				color = 0x55FF55;
-			} else if (durability == max - 1) {
-				color = 0xFFFFFF;
-			} else if (durability <= 71) {
-				color = 0xFF5555;
-			} else if (durability <= 149) {
-				color = 0xFFA500;
-			} else if (durability <= 281) {
-				color = 0xFFFF55;
-			} else {
-				color = 0xFFFFFF;
-			}
-		}
-
-		String text = config.showMaxDamage ? durability + "/" + max : String.valueOf(durability);
-		int textWidth = client.textRenderer.getWidth(text);
-
-		int textX;
-		if (config.durabilityOnRight) {
-			textX = x + 10;
-		} else {
-			textX = x - textWidth + 6;
-		}
-
-		context.drawText(client.textRenderer, text, textX, y + 4, color, config.showShadow);
-	}
-
-	public static void loadConfig() {
-		try {
-			if (!configFile.exists()) {
-				config = new JustArmourConfigData();
-				saveConfig();
-				return;
-			}
-			FileReader reader = new FileReader(configFile);
-			config = gson.fromJson(reader, JustArmourConfigData.class);
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			config = new JustArmourConfigData();
-		}
-	}
-
-	public static void saveConfig() {
-		try {
-			configFile.getParentFile().mkdirs();
-			FileWriter writer = new FileWriter(configFile);
-			gson.toJson(config, writer);
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+    public static void saveConfig() {
+        try {
+            configFile.getParentFile().mkdirs();
+            FileWriter writer = new FileWriter(configFile);
+            gson.toJson(config, writer);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
