@@ -172,7 +172,7 @@ public class JustArmourClient implements ClientModInitializer {
 		// Calculate positions with scale
 		int iconX = config.durabilityOnRight ? x - (int)(10 * config.scale) : x + (int)(10 * config.scale);
 
-		// SCALE ITEMS AND TEXT using 1.21.10 matrix method
+		// SCALE ITEMS AND TEXT using 1.21.11 matrix method
 		context.getMatrices().pushMatrix();
 		context.getMatrices().scale(config.scale, config.scale);
 

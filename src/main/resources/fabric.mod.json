@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
-	"id": "justarmour",
+	"id": "justamour",
 	"version": "${version}",
-	"name": "JustArmour",
+	"name": "JustAmour",
 	"description": "A Simple ArmourHud Mod! :)",
 	"authors": [
 		"Coriand3rr!"
@@ -12,26 +12,26 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/justarmour/icon.png",
+	"icon": "assets/justamour/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.coriander.justarmour.JustArmour"
+			"com.coriander.justarmour.JustAmour"
 		],
 		"client": [
 			"com.coriander.justarmour.JustArmourClient"
 		]
 	},
 	"mixins": [
-		"justarmour.mixins.json",
+		"justamour.mixins.json",
 		{
-			"config": "justarmour.client.mixins.json",
+			"config": "justamour.client.mixins.json",
 			"environment": "client"
 		}
 	],
 	"depends": {
 		"fabricloader": ">=0.18.4",
-		"minecraft": "~1.21.10",
+		"minecraft": "~1.21.11",
 		"java": ">=21",
 		"fabric-api": "*"
 	}
