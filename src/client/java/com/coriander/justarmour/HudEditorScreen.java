@@ -1,5 +1,6 @@
 package com.coriander.justarmour;
 
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -19,8 +20,67 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+
+        // Register mouse event handlers using Fabric API
+        ScreenMouseEvents.beforeMouseClick(this).register((screen, click) -> {
+            double mouseX = click.x();
+            double mouseY = click.y();
+            int button = click.button();
+
+            if (button == 0) {
+                // Check offhand item box first
+                if (shouldShowOffhandItem() && isInsideOffhandItemBox(mouseX, mouseY)) {
+                    draggingOffhandItem = true;
+                    offhandDragOffsetX = (int) mouseX - JustArmourClient.config.offhandItemX;
+                    offhandDragOffsetY = (int) mouseY - JustArmourClient.config.offhandItemY;
+                    return;
+                }
+
+                // Check held item box
+                if (shouldShowHeldItem() && isInsideHeldItemBox(mouseX, mouseY)) {
+                    draggingHeldItem = true;
+                    heldDragOffsetX = (int) mouseX - JustArmourClient.config.heldItemX;
+                    heldDragOffsetY = (int) mouseY - JustArmourClient.config.heldItemY;
+                    return;
+                }
+
+                // Check armor box
+                if (isInsideArmorBox(mouseX, mouseY)) {
+                    draggingArmor = true;
+                    armorDragOffsetX = (int) mouseX - JustArmourClient.config.hudX;
+                    armorDragOffsetY = (int) mouseY - JustArmourClient.config.hudY;
+                }
+            }
+        });
+
+        ScreenMouseEvents.beforeMouseRelease(this).register((screen, click) -> {
+            int button = click.button();
+            if (button == 0 && (draggingArmor || draggingHeldItem || draggingOffhandItem)) {
+                draggingArmor = false;
+                draggingHeldItem = false;
+                draggingOffhandItem = false;
+                JustArmourClient.saveConfig();
+            }
+        });
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
+
+        // Handle dragging
+        if (draggingArmor) {
+            JustArmourClient.config.hudX = (int)(mouseX - armorDragOffsetX);
+            JustArmourClient.config.hudY = (int)(mouseY - armorDragOffsetY);
+        } else if (draggingHeldItem) {
+            JustArmourClient.config.heldItemX = (int)(mouseX - heldDragOffsetX);
+            JustArmourClient.config.heldItemY = (int)(mouseY - heldDragOffsetY);
+        } else if (draggingOffhandItem) {
+            JustArmourClient.config.offhandItemX = (int)(mouseX - offhandDragOffsetX);
+            JustArmourClient.config.offhandItemY = (int)(mouseY - offhandDragOffsetY);
+        }
 
         // Draw box around armor HUD area
         drawArmorBox(context);
@@ -160,36 +220,6 @@ public class HudEditorScreen extends Screen {
         context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            // Check offhand item box first
-            if (shouldShowOffhandItem() && isInsideOffhandItemBox(mouseX, mouseY)) {
-                draggingOffhandItem = true;
-                offhandDragOffsetX = (int) mouseX - JustArmourClient.config.offhandItemX;
-                offhandDragOffsetY = (int) mouseY - JustArmourClient.config.offhandItemY;
-                return true;
-            }
-
-            // Check held item box
-            if (shouldShowHeldItem() && isInsideHeldItemBox(mouseX, mouseY)) {
-                draggingHeldItem = true;
-                heldDragOffsetX = (int) mouseX - JustArmourClient.config.heldItemX;
-                heldDragOffsetY = (int) mouseY - JustArmourClient.config.heldItemY;
-                return true;
-            }
-
-            // Check armor box
-            if (isInsideArmorBox(mouseX, mouseY)) {
-                draggingArmor = true;
-                armorDragOffsetX = (int) mouseX - JustArmourClient.config.hudX;
-                armorDragOffsetY = (int) mouseY - JustArmourClient.config.hudY;
-                return true;
-            }
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-
     private boolean isInsideArmorBox(double mouseX, double mouseY) {
         int hudX = JustArmourClient.config.hudX;
         int hudY = JustArmourClient.config.hudY;
@@ -254,44 +284,6 @@ public class HudEditorScreen extends Screen {
 
         return mouseX >= hitboxXStart && mouseX <= hitboxXEnd &&
                 mouseY >= topY && mouseY <= bottomY;
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (button == 0) {
-            if (draggingArmor) {
-                JustArmourClient.config.hudX = (int)(mouseX - armorDragOffsetX);
-                JustArmourClient.config.hudY = (int)(mouseY - armorDragOffsetY);
-                return true;
-            }
-
-            if (draggingHeldItem) {
-                JustArmourClient.config.heldItemX = (int)(mouseX - heldDragOffsetX);
-                JustArmourClient.config.heldItemY = (int)(mouseY - heldDragOffsetY);
-                return true;
-            }
-
-            if (draggingOffhandItem) {
-                JustArmourClient.config.offhandItemX = (int)(mouseX - offhandDragOffsetX);
-                JustArmourClient.config.offhandItemY = (int)(mouseY - offhandDragOffsetY);
-                return true;
-            }
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            if (draggingArmor || draggingHeldItem || draggingOffhandItem) {
-                draggingArmor = false;
-                draggingHeldItem = false;
-                draggingOffhandItem = false;
-                JustArmourClient.saveConfig();
-                return true;
-            }
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
