@@ -13,6 +13,7 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.item.ItemStack;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.EquipmentSlot;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
@@ -55,7 +56,6 @@ public class JustArmourClient implements ClientModInitializer {
 		int screenHeight = client.getWindow().getScaledHeight();
 
 		// Calculate perfect bottom right position for armor
-		// Account for: item icon (16px) + text width (~30px) + padding
 		int rightMargin = config.durabilityOnRight ? 80 : 60;
 		int bottomMargin = 40;
 
@@ -76,18 +76,18 @@ public class JustArmourClient implements ClientModInitializer {
 	private void registerKeybinds() {
 		// Toggle HUD keybind (G)
 		toggleHudKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"justarmourtoggleKey",
+				"key.justarmour.toggle",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_G,
-				"justarmour"
+				"category.justarmour"
 		));
 
 		// Config Screen keybind (J)
 		openConfigScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"justarmourconfigKey",
+				"key.justarmour.config",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_J,
-				"justarmour"
+				"category.justarmour"
 		));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -123,14 +123,21 @@ public class JustArmourClient implements ClientModInitializer {
 		matrices.scale(config.scale, config.scale, 1.0f);
 		matrices.translate(-baseX, -baseY, 0);
 
-		int x = baseX;
 		int y = baseY;
 
-		// Render armor pieces (boots at baseY, going up)
-		for (int i = 0; i < 4; i++) {
-			ItemStack stack = client.player.getInventory().armor.get(i);
+		// Get armor slots in order: boots, leggings, chestplate, helmet
+		EquipmentSlot[] armorSlots = {
+				EquipmentSlot.FEET,
+				EquipmentSlot.LEGS,
+				EquipmentSlot.CHEST,
+				EquipmentSlot.HEAD
+		};
+
+		// Render armor pieces
+		for (EquipmentSlot slot : armorSlots) {
+			ItemStack stack = client.player.getEquippedStack(slot);
 			if (!stack.isEmpty()) {
-				renderArmorPiece(context, stack, x, y);
+				renderArmorPiece(context, stack, baseX, y);
 			}
 			y -= config.spacing;
 		}
@@ -153,15 +160,11 @@ public class JustArmourClient implements ClientModInitializer {
 		MatrixStack matrices = context.getMatrices();
 		matrices.push();
 
-		int x = config.heldItemX;
-		int y = config.heldItemY;
-
-		// Apply scale
-		matrices.translate(x, y, 0);
+		matrices.translate(config.heldItemX, config.heldItemY, 0);
 		matrices.scale(config.scale, config.scale, 1.0f);
-		matrices.translate(-x, -y, 0);
+		matrices.translate(-config.heldItemX, -config.heldItemY, 0);
 
-		renderArmorPiece(context, heldItem, x, y);
+		renderArmorPiece(context, heldItem, config.heldItemX, config.heldItemY);
 
 		matrices.pop();
 	}
@@ -181,15 +184,11 @@ public class JustArmourClient implements ClientModInitializer {
 		MatrixStack matrices = context.getMatrices();
 		matrices.push();
 
-		int x = config.offhandItemX;
-		int y = config.offhandItemY;
-
-		// Apply scale
-		matrices.translate(x, y, 0);
+		matrices.translate(config.offhandItemX, config.offhandItemY, 0);
 		matrices.scale(config.scale, config.scale, 1.0f);
-		matrices.translate(-x, -y, 0);
+		matrices.translate(-config.offhandItemX, -config.offhandItemY, 0);
 
-		renderArmorPiece(context, offhandItem, x, y);
+		renderArmorPiece(context, offhandItem, config.offhandItemX, config.offhandItemY);
 
 		matrices.pop();
 	}
@@ -202,7 +201,7 @@ public class JustArmourClient implements ClientModInitializer {
 		// Draw item with vanilla durability bar if enabled
 		if (config.showDurabilityBar) {
 			context.drawItem(stack, iconX, y);
-			context.drawItemInSlot(client.textRenderer, stack, iconX, y);
+			context.drawStackOverlay(client.textRenderer, stack, iconX, y);
 		} else {
 			// Draw item without bar
 			context.drawItem(stack, iconX, y);
@@ -243,6 +242,7 @@ public class JustArmourClient implements ClientModInitializer {
 		} else {
 			textX = x - textWidth + 6;
 		}
+
 		context.drawText(client.textRenderer, text, textX, y + 4, color, config.showShadow);
 	}
 

@@ -14,7 +14,7 @@ public class JustArmourConfigData {
     public boolean showOffhandItem = false;
 
     // Show non-damageable held items (like golden apple)
-    public boolean showAllHeldItems = true;
+    public boolean showAllHeldItems = false;
 
     // Show max damage format (407/407)
     public boolean showMaxDamage = false;
@@ -29,7 +29,7 @@ public class JustArmourConfigData {
     public boolean hideDurabilityNumbers = false;
 
     // Scale/spacing
-    public int spacing = 18;
+    public int spacing = 17;
 
     // Scale/thickness (0.5 to 2.0)
     public float scale = 1.0f;
