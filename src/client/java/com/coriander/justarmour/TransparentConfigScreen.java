@@ -193,8 +193,8 @@ public class TransparentConfigScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         // Title
-        context.drawCenteredTextWithShadow(this.textRenderer, "JustArmour Settings", this.width / 2, 20, 0xFFFFFF);
-        context.drawCenteredTextWithShadow(this.textRenderer, "Press ESC to close", this.width / 2, this.height - 10, 0xAAAAAA);
+        context.drawCenteredTextWithShadow(this.textRenderer, "JustArmour Settings", this.width / 2, 20, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, "Press ESC to close", this.width / 2, this.height - 10, 0xFFAAAAAA);
     }
 
     @Override
