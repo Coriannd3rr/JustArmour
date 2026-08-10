@@ -1,11 +1,12 @@
 package com.coriander.justarmour;
 
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.NonNull;
 
 public class HudEditorScreen extends Screen {
     private int armorDragOffsetX, armorDragOffsetY;
@@ -16,7 +17,7 @@ public class HudEditorScreen extends Screen {
     private boolean draggingOffhandItem = false;
 
     protected HudEditorScreen() {
-        super(Text.literal("HUD Editor"));
+        super(Component.literal("HUD Editor"));
     }
 
     @Override
@@ -67,69 +68,69 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // Handle dragging
         if (draggingArmor) {
-            JustArmourClient.config.hudX = (int)(mouseX - armorDragOffsetX);
-            JustArmourClient.config.hudY = (int)(mouseY - armorDragOffsetY);
+            JustArmourClient.config.hudX = (mouseX - armorDragOffsetX);
+            JustArmourClient.config.hudY = (mouseY - armorDragOffsetY);
         } else if (draggingHeldItem) {
-            JustArmourClient.config.heldItemX = (int)(mouseX - heldDragOffsetX);
-            JustArmourClient.config.heldItemY = (int)(mouseY - heldDragOffsetY);
+            JustArmourClient.config.heldItemX = (mouseX - heldDragOffsetX);
+            JustArmourClient.config.heldItemY = (mouseY - heldDragOffsetY);
         } else if (draggingOffhandItem) {
-            JustArmourClient.config.offhandItemX = (int)(mouseX - offhandDragOffsetX);
-            JustArmourClient.config.offhandItemY = (int)(mouseY - offhandDragOffsetY);
+            JustArmourClient.config.offhandItemX = (mouseX - offhandDragOffsetX);
+            JustArmourClient.config.offhandItemY = (mouseY - offhandDragOffsetY);
         }
 
         // Draw box around armor HUD area
-        drawArmorBox(context);
+        drawArmorBox(graphics);
 
         // Draw box around held item if visible
         if (shouldShowHeldItem()) {
-            drawHeldItemBox(context);
+            drawHeldItemBox(graphics);
         }
 
         // Draw box around offhand item if visible
         if (shouldShowOffhandItem()) {
-            drawOffhandItemBox(context);
+            drawOffhandItemBox(graphics);
         }
 
         // Render the armor HUD
-        JustArmourClient.renderArmorHUD(context, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
+        JustArmourClient.renderArmorHUD(graphics, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
 
         // Render held item HUD
-        JustArmourClient.renderHeldItemHUD(context);
+        JustArmourClient.renderHeldItemHUD(graphics);
 
         // Render offhand item HUD
-        JustArmourClient.renderOffhandItemHUD(context);
+        JustArmourClient.renderOffhandItemHUD(graphics);
     }
 
     private boolean shouldShowHeldItem() {
         if (!JustArmourClient.config.showHeldItem) return false;
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null) return false;
 
-        ItemStack heldItem = client.player.getMainHandStack();
+        ItemStack heldItem = client.player.getMainHandItem();
         if (heldItem.isEmpty()) return false;
 
-        return JustArmourClient.config.showAllHeldItems || heldItem.isDamageable();
+        return JustArmourClient.config.showAllHeldItems || heldItem.isDamageableItem();
     }
 
     private boolean shouldShowOffhandItem() {
         if (!JustArmourClient.config.showOffhandItem) return false;
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null) return false;
 
-        ItemStack offhandItem = client.player.getOffHandStack();
+        ItemStack offhandItem = client.player.getOffhandItem();
         if (offhandItem.isEmpty()) return false;
 
-        return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageable();
+        return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageableItem();
     }
 
-    private void drawArmorBox(DrawContext context) {
+    private void drawArmorBox(GuiGraphicsExtractor graphics) {
         int hudX = JustArmourClient.config.hudX;
         int hudY = JustArmourClient.config.hudY;
         int spacing = JustArmourClient.config.spacing;
@@ -150,19 +151,10 @@ public class HudEditorScreen extends Screen {
             rightX = hudX + (int)(30 * scale);
         }
 
-        // Draw semi-transparent background
-        int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
-
-        // Draw border
-        int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
     }
 
-    private void drawHeldItemBox(DrawContext context) {
+    private void drawHeldItemBox(GuiGraphicsExtractor graphics) {
         int x = JustArmourClient.config.heldItemX;
         int y = JustArmourClient.config.heldItemY;
         float scale = JustArmourClient.config.scale;
@@ -179,19 +171,10 @@ public class HudEditorScreen extends Screen {
             rightX = x + (int)(30 * scale);
         }
 
-        // Draw semi-transparent background
-        int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
-
-        // Draw border
-        int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
     }
 
-    private void drawOffhandItemBox(DrawContext context) {
+    private void drawOffhandItemBox(GuiGraphicsExtractor graphics) {
         int x = JustArmourClient.config.offhandItemX;
         int y = JustArmourClient.config.offhandItemY;
         float scale = JustArmourClient.config.scale;
@@ -208,16 +191,20 @@ public class HudEditorScreen extends Screen {
             rightX = x + (int)(30 * scale);
         }
 
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
+    }
+
+    private void drawBoxBackground(GuiGraphicsExtractor graphics, int leftX, int topY, int bottomY, int rightX) {
         // Draw semi-transparent background
         int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
+        graphics.fill(leftX, topY, rightX, bottomY, bgColor);
 
         // Draw border
         int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        graphics.fill(leftX, topY, rightX, topY + 1, borderColor);
+        graphics.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
+        graphics.fill(leftX, topY, leftX + 1, bottomY, borderColor);
+        graphics.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
     private boolean isInsideArmorBox(double mouseX, double mouseY) {
@@ -287,8 +274,8 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         JustArmourClient.saveConfig();
     }
 }
