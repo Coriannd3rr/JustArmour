@@ -2,10 +2,11 @@ package com.coriander.justarmour;
 
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.NonNull;
 
 public class HudEditorScreen extends Screen {
     private int armorDragOffsetX, armorDragOffsetY;
@@ -67,8 +68,8 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         // Handle dragging
         if (draggingArmor) {
@@ -129,7 +130,7 @@ public class HudEditorScreen extends Screen {
         return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageableItem();
     }
 
-    private void drawArmorBox(GuiGraphics context) {
+    private void drawArmorBox(GuiGraphicsExtractor context) {
         int hudX = JustArmourClient.config.hudX;
         int hudY = JustArmourClient.config.hudY;
         int spacing = JustArmourClient.config.spacing;
@@ -162,7 +163,7 @@ public class HudEditorScreen extends Screen {
         context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
-    private void drawHeldItemBox(GuiGraphics context) {
+    private void drawHeldItemBox(GuiGraphicsExtractor context) {
         int x = JustArmourClient.config.heldItemX;
         int y = JustArmourClient.config.heldItemY;
         float scale = JustArmourClient.config.scale;
@@ -191,7 +192,7 @@ public class HudEditorScreen extends Screen {
         context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
-    private void drawOffhandItemBox(GuiGraphics context) {
+    private void drawOffhandItemBox(GuiGraphicsExtractor context) {
         int x = JustArmourClient.config.offhandItemX;
         int y = JustArmourClient.config.offhandItemY;
         float scale = JustArmourClient.config.scale;

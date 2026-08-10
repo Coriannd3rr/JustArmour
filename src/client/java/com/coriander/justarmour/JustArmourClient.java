@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.network.chat.Component;
@@ -35,18 +35,17 @@ public class JustArmourClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		loadConfig();
 
-		HudRenderCallback.EVENT.register((context, delta) -> {
-			// Set default position on first render if not set
+		HudElementRegistry.addLast(Identifier.parse("just_armour:hud"), ((graphics, deltaTracker) -> {
 			if (config.hudX == -1 || config.hudY == -1) {
 				setDefaultPosition();
 			}
 
 			if (config.hudEnabled) {
-				renderArmorHUD(context, config.hudX, config.hudY);
-				renderHeldItemHUD(context);
-				renderOffhandItemHUD(context);
+				renderArmorHUD(graphics, config.hudX, config.hudY);
+				renderHeldItemHUD(graphics);
+				renderOffhandItemHUD(graphics);
 			}
-		});
+		}));
 
 		registerKeybinds();
 	}
@@ -76,7 +75,7 @@ public class JustArmourClient implements ClientModInitializer {
 
 	private void registerKeybinds() {
 		// Toggle HUD keybind (G)
-		toggleHudKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+		toggleHudKeybind = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 				"key.justarmour.toggle",
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_G,
@@ -84,7 +83,7 @@ public class JustArmourClient implements ClientModInitializer {
 		));
 
 		// Config Screen keybind (J)
-		openConfigScreenKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+		openConfigScreenKeybind = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 				"key.justarmour.config",
 				InputConstants.Type.KEYSYM,
 				GLFW.GLFW_KEY_J,
@@ -99,22 +98,22 @@ public class JustArmourClient implements ClientModInitializer {
 
 				if (client.player != null) {
 					String message = "Armor HUD " + (config.hudEnabled ? "on" : "off");
-					client.player.displayClientMessage(Component.literal(message), false);
+					client.player.sendSystemMessage(Component.literal(message));
 				}
 			}
 
 			// Open Config Screen
 			while (openConfigScreenKeybind.consumeClick()) {
 				if (client.player != null) {
-					client.setScreen(new TransparentConfigScreen());
+					client.gui.setScreen(new TransparentConfigScreen());
 				}
 			}
 		});
 	}
 
-	public static void renderArmorHUD(GuiGraphics context, int baseX, int baseY) {
+	public static void renderArmorHUD(GuiGraphicsExtractor context, int baseX, int baseY) {
 		Minecraft client = Minecraft.getInstance();
-		if (client.player == null || client.options.hideGui) return;
+		if (client.player == null || client.gui.hud.isHidden()) return;
 
 		int y = baseY;
 
@@ -136,11 +135,11 @@ public class JustArmourClient implements ClientModInitializer {
 		}
 	}
 
-	public static void renderHeldItemHUD(GuiGraphics context) {
+	public static void renderHeldItemHUD(GuiGraphicsExtractor context) {
 		if (!config.showHeldItem) return;
 
 		Minecraft client = Minecraft.getInstance();
-		if (client.player == null || client.options.hideGui) return;
+		if (client.player == null || client.gui.hud.isHidden()) return;
 
 		ItemStack heldItem = client.player.getMainHandItem();
 		if (heldItem.isEmpty()) return;
@@ -151,11 +150,11 @@ public class JustArmourClient implements ClientModInitializer {
 		renderArmorPiece(context, heldItem, config.heldItemX, config.heldItemY);
 	}
 
-	public static void renderOffhandItemHUD(GuiGraphics context) {
+	public static void renderOffhandItemHUD(GuiGraphicsExtractor context) {
 		if (!config.showOffhandItem) return;
 
 		Minecraft client = Minecraft.getInstance();
-		if (client.player == null || client.options.hideGui) return;
+		if (client.player == null || client.gui.hud.isHidden()) return;
 
 		ItemStack offhandItem = client.player.getOffhandItem();
 		if (offhandItem.isEmpty()) return;
@@ -166,7 +165,7 @@ public class JustArmourClient implements ClientModInitializer {
 		renderArmorPiece(context, offhandItem, config.offhandItemX, config.offhandItemY);
 	}
 
-	private static void renderArmorPiece(GuiGraphics context, ItemStack stack, int x, int y) {
+	private static void renderArmorPiece(GuiGraphicsExtractor context, ItemStack stack, int x, int y) {
 		Minecraft client = Minecraft.getInstance();
 
 		// Calculate positions with scale
@@ -181,11 +180,11 @@ public class JustArmourClient implements ClientModInitializer {
 
 		// Draw item with vanilla durability bar if enabled
 		if (config.showDurabilityBar) {
-			context.renderItem(stack, scaledIconX, scaledY);
-			context.renderItemDecorations(client.font, stack, scaledIconX, scaledY);
+			context.item(stack, scaledIconX, scaledY);
+			context.itemDecorations(client.font, stack, scaledIconX, scaledY);
 		} else {
 			// Draw item without bar
-			context.renderItem(stack, scaledIconX, scaledY);
+			context.item(stack, scaledIconX, scaledY);
 		}
 
 		// Don't render durability text if hidden or item isn't damageable
@@ -225,7 +224,7 @@ public class JustArmourClient implements ClientModInitializer {
 
 			int textY = scaledY + 5;
 
-			context.drawString(client.font, text, textX, textY, color, config.showShadow);
+			context.text(client.font, text, textX, textY, color, config.showShadow);
 		}
 
 		context.pose().popMatrix();

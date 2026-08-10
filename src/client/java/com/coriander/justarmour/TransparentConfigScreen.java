@@ -1,6 +1,6 @@
 package com.coriander.justarmour;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -173,7 +173,7 @@ public class TransparentConfigScreen extends Screen {
                 Component.literal("HUD Editor"),
                 button -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new HudEditorScreen());
+                        this.minecraft.gui.setScreen(new HudEditorScreen());
                     }
                 }
         ).bounds(editorButtonX, editorButtonY, editorButtonWidth, buttonHeight).build();
@@ -181,7 +181,7 @@ public class TransparentConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         // Transparent dark background
         context.fillGradient(0, 0, this.width, this.height, 0x60000000, 0x60000000);
 
@@ -190,11 +190,11 @@ public class TransparentConfigScreen extends Screen {
         JustArmourClient.renderHeldItemHUD(context);
         JustArmourClient.renderOffhandItemHUD(context);
 
-        super.render(context, mouseX, mouseY, delta);
+        super.extractRenderState(context, mouseX, mouseY, delta);
 
         // Title
-        context.drawCenteredString(this.font, "JustArmour Settings", this.width / 2, 20, 0xFFFFFFFF);
-        context.drawCenteredString(this.font, "Press ESC to close", this.width / 2, this.height - 10, 0xFFAAAAAA);
+        context.centeredText(this.font, "JustArmour Settings", this.width / 2, 20, 0xFFFFFFFF);
+        context.centeredText(this.font, "Press ESC to close", this.width / 2, this.height - 10, 0xFFAAAAAA);
     }
 
     @Override
