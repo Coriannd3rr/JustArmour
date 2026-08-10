@@ -1,11 +1,11 @@
 package com.coriander.justarmour;
 
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 public class HudEditorScreen extends Screen {
     private int armorDragOffsetX, armorDragOffsetY;
@@ -16,7 +16,7 @@ public class HudEditorScreen extends Screen {
     private boolean draggingOffhandItem = false;
 
     protected HudEditorScreen() {
-        super(Text.literal("HUD Editor"));
+        super(Component.literal("HUD Editor"));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
         // Handle dragging
@@ -108,28 +108,28 @@ public class HudEditorScreen extends Screen {
     private boolean shouldShowHeldItem() {
         if (!JustArmourClient.config.showHeldItem) return false;
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null) return false;
 
-        ItemStack heldItem = client.player.getMainHandStack();
+        ItemStack heldItem = client.player.getMainHandItem();
         if (heldItem.isEmpty()) return false;
 
-        return JustArmourClient.config.showAllHeldItems || heldItem.isDamageable();
+        return JustArmourClient.config.showAllHeldItems || heldItem.isDamageableItem();
     }
 
     private boolean shouldShowOffhandItem() {
         if (!JustArmourClient.config.showOffhandItem) return false;
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player == null) return false;
 
-        ItemStack offhandItem = client.player.getOffHandStack();
+        ItemStack offhandItem = client.player.getOffhandItem();
         if (offhandItem.isEmpty()) return false;
 
-        return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageable();
+        return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageableItem();
     }
 
-    private void drawArmorBox(DrawContext context) {
+    private void drawArmorBox(GuiGraphics context) {
         int hudX = JustArmourClient.config.hudX;
         int hudY = JustArmourClient.config.hudY;
         int spacing = JustArmourClient.config.spacing;
@@ -162,7 +162,7 @@ public class HudEditorScreen extends Screen {
         context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
-    private void drawHeldItemBox(DrawContext context) {
+    private void drawHeldItemBox(GuiGraphics context) {
         int x = JustArmourClient.config.heldItemX;
         int y = JustArmourClient.config.heldItemY;
         float scale = JustArmourClient.config.scale;
@@ -191,7 +191,7 @@ public class HudEditorScreen extends Screen {
         context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
-    private void drawOffhandItemBox(DrawContext context) {
+    private void drawOffhandItemBox(GuiGraphics context) {
         int x = JustArmourClient.config.offhandItemX;
         int y = JustArmourClient.config.offhandItemY;
         float scale = JustArmourClient.config.scale;
@@ -287,8 +287,8 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void close() {
-        super.close();
+    public void onClose() {
+        super.onClose();
         JustArmourClient.saveConfig();
     }
 }
