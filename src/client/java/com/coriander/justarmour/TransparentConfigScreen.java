@@ -181,20 +181,20 @@ public class TransparentConfigScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         // Transparent dark background
-        context.fillGradient(0, 0, this.width, this.height, 0x60000000, 0x60000000);
+        graphics.fillGradient(0, 0, this.width, this.height, 0x60000000, 0x60000000);
 
         // Render the HUD in the background so user can see changes live
-        JustArmourClient.renderArmorHUD(context, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
-        JustArmourClient.renderHeldItemHUD(context);
-        JustArmourClient.renderOffhandItemHUD(context);
+        JustArmourClient.renderArmorHUD(graphics, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
+        JustArmourClient.renderHeldItemHUD(graphics);
+        JustArmourClient.renderOffhandItemHUD(graphics);
 
-        super.extractRenderState(context, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // Title
-        context.centeredText(this.font, "JustArmour Settings", this.width / 2, 20, 0xFFFFFFFF);
-        context.centeredText(this.font, "Press ESC to close", this.width / 2, this.height - 10, 0xFFAAAAAA);
+        graphics.centeredText(this.font, "JustArmour Settings", this.width / 2, 20, 0xFFFFFFFF);
+        graphics.centeredText(this.font, "Press ESC to close", this.width / 2, this.height - 10, 0xFFAAAAAA);
     }
 
     @Override

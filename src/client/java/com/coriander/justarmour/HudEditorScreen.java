@@ -68,42 +68,42 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(context, mouseX, mouseY, delta);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
 
         // Handle dragging
         if (draggingArmor) {
-            JustArmourClient.config.hudX = (int)(mouseX - armorDragOffsetX);
-            JustArmourClient.config.hudY = (int)(mouseY - armorDragOffsetY);
+            JustArmourClient.config.hudX = (mouseX - armorDragOffsetX);
+            JustArmourClient.config.hudY = (mouseY - armorDragOffsetY);
         } else if (draggingHeldItem) {
-            JustArmourClient.config.heldItemX = (int)(mouseX - heldDragOffsetX);
-            JustArmourClient.config.heldItemY = (int)(mouseY - heldDragOffsetY);
+            JustArmourClient.config.heldItemX = (mouseX - heldDragOffsetX);
+            JustArmourClient.config.heldItemY = (mouseY - heldDragOffsetY);
         } else if (draggingOffhandItem) {
-            JustArmourClient.config.offhandItemX = (int)(mouseX - offhandDragOffsetX);
-            JustArmourClient.config.offhandItemY = (int)(mouseY - offhandDragOffsetY);
+            JustArmourClient.config.offhandItemX = (mouseX - offhandDragOffsetX);
+            JustArmourClient.config.offhandItemY = (mouseY - offhandDragOffsetY);
         }
 
         // Draw box around armor HUD area
-        drawArmorBox(context);
+        drawArmorBox(graphics);
 
         // Draw box around held item if visible
         if (shouldShowHeldItem()) {
-            drawHeldItemBox(context);
+            drawHeldItemBox(graphics);
         }
 
         // Draw box around offhand item if visible
         if (shouldShowOffhandItem()) {
-            drawOffhandItemBox(context);
+            drawOffhandItemBox(graphics);
         }
 
         // Render the armor HUD
-        JustArmourClient.renderArmorHUD(context, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
+        JustArmourClient.renderArmorHUD(graphics, JustArmourClient.config.hudX, JustArmourClient.config.hudY);
 
         // Render held item HUD
-        JustArmourClient.renderHeldItemHUD(context);
+        JustArmourClient.renderHeldItemHUD(graphics);
 
         // Render offhand item HUD
-        JustArmourClient.renderOffhandItemHUD(context);
+        JustArmourClient.renderOffhandItemHUD(graphics);
     }
 
     private boolean shouldShowHeldItem() {
@@ -130,7 +130,7 @@ public class HudEditorScreen extends Screen {
         return JustArmourClient.config.showAllHeldItems || offhandItem.isDamageableItem();
     }
 
-    private void drawArmorBox(GuiGraphicsExtractor context) {
+    private void drawArmorBox(GuiGraphicsExtractor graphics) {
         int hudX = JustArmourClient.config.hudX;
         int hudY = JustArmourClient.config.hudY;
         int spacing = JustArmourClient.config.spacing;
@@ -151,19 +151,10 @@ public class HudEditorScreen extends Screen {
             rightX = hudX + (int)(30 * scale);
         }
 
-        // Draw semi-transparent background
-        int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
-
-        // Draw border
-        int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
     }
 
-    private void drawHeldItemBox(GuiGraphicsExtractor context) {
+    private void drawHeldItemBox(GuiGraphicsExtractor graphics) {
         int x = JustArmourClient.config.heldItemX;
         int y = JustArmourClient.config.heldItemY;
         float scale = JustArmourClient.config.scale;
@@ -180,19 +171,10 @@ public class HudEditorScreen extends Screen {
             rightX = x + (int)(30 * scale);
         }
 
-        // Draw semi-transparent background
-        int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
-
-        // Draw border
-        int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
     }
 
-    private void drawOffhandItemBox(GuiGraphicsExtractor context) {
+    private void drawOffhandItemBox(GuiGraphicsExtractor graphics) {
         int x = JustArmourClient.config.offhandItemX;
         int y = JustArmourClient.config.offhandItemY;
         float scale = JustArmourClient.config.scale;
@@ -209,16 +191,20 @@ public class HudEditorScreen extends Screen {
             rightX = x + (int)(30 * scale);
         }
 
+        drawBoxBackground(graphics, leftX, topY, bottomY, rightX);
+    }
+
+    private void drawBoxBackground(GuiGraphicsExtractor graphics, int leftX, int topY, int bottomY, int rightX) {
         // Draw semi-transparent background
         int bgColor = 0x80000000;
-        context.fill(leftX, topY, rightX, bottomY, bgColor);
+        graphics.fill(leftX, topY, rightX, bottomY, bgColor);
 
         // Draw border
         int borderColor = 0xFF404040;
-        context.fill(leftX, topY, rightX, topY + 1, borderColor);
-        context.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
-        context.fill(leftX, topY, leftX + 1, bottomY, borderColor);
-        context.fill(rightX - 1, topY, rightX, bottomY, borderColor);
+        graphics.fill(leftX, topY, rightX, topY + 1, borderColor);
+        graphics.fill(leftX, bottomY - 1, rightX, bottomY, borderColor);
+        graphics.fill(leftX, topY, leftX + 1, bottomY, borderColor);
+        graphics.fill(rightX - 1, topY, rightX, bottomY, borderColor);
     }
 
     private boolean isInsideArmorBox(double mouseX, double mouseY) {

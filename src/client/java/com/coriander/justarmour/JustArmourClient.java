@@ -111,7 +111,7 @@ public class JustArmourClient implements ClientModInitializer {
 		});
 	}
 
-	public static void renderArmorHUD(GuiGraphicsExtractor context, int baseX, int baseY) {
+	public static void renderArmorHUD(GuiGraphicsExtractor graphics, int baseX, int baseY) {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player == null || client.gui.hud.isHidden()) return;
 
@@ -129,13 +129,13 @@ public class JustArmourClient implements ClientModInitializer {
 		for (EquipmentSlot slot : armorSlots) {
 			ItemStack stack = client.player.getItemBySlot(slot);
 			if (!stack.isEmpty()) {
-				renderArmorPiece(context, stack, baseX, y);
+				renderArmorPiece(graphics, stack, baseX, y);
 			}
 			y -= (int)(config.spacing * config.scale);
 		}
 	}
 
-	public static void renderHeldItemHUD(GuiGraphicsExtractor context) {
+	public static void renderHeldItemHUD(GuiGraphicsExtractor graphics) {
 		if (!config.showHeldItem) return;
 
 		Minecraft client = Minecraft.getInstance();
@@ -147,10 +147,10 @@ public class JustArmourClient implements ClientModInitializer {
 		// Show all items if enabled, otherwise only damageable
 		if (!config.showAllHeldItems && !heldItem.isDamageableItem()) return;
 
-		renderArmorPiece(context, heldItem, config.heldItemX, config.heldItemY);
+		renderArmorPiece(graphics, heldItem, config.heldItemX, config.heldItemY);
 	}
 
-	public static void renderOffhandItemHUD(GuiGraphicsExtractor context) {
+	public static void renderOffhandItemHUD(GuiGraphicsExtractor graphics) {
 		if (!config.showOffhandItem) return;
 
 		Minecraft client = Minecraft.getInstance();
@@ -162,29 +162,29 @@ public class JustArmourClient implements ClientModInitializer {
 		// Show all items if enabled, otherwise only damageable
 		if (!config.showAllHeldItems && !offhandItem.isDamageableItem()) return;
 
-		renderArmorPiece(context, offhandItem, config.offhandItemX, config.offhandItemY);
+		renderArmorPiece(graphics, offhandItem, config.offhandItemX, config.offhandItemY);
 	}
 
-	private static void renderArmorPiece(GuiGraphicsExtractor context, ItemStack stack, int x, int y) {
+	private static void renderArmorPiece(GuiGraphicsExtractor graphics, ItemStack stack, int x, int y) {
 		Minecraft client = Minecraft.getInstance();
 
 		// Calculate positions with scale
 		int iconX = config.durabilityOnRight ? x - (int)(10 * config.scale) : x + (int)(10 * config.scale);
 
 		// SCALE ITEMS AND TEXT using 1.21.11 matrix method
-		context.pose().pushMatrix();
-		context.pose().scale(config.scale, config.scale);
+		graphics.pose().pushMatrix();
+		graphics.pose().scale(config.scale, config.scale);
 
 		int scaledIconX = (int)(iconX / config.scale);
 		int scaledY = (int)(y / config.scale);
 
 		// Draw item with vanilla durability bar if enabled
 		if (config.showDurabilityBar) {
-			context.item(stack, scaledIconX, scaledY);
-			context.itemDecorations(client.font, stack, scaledIconX, scaledY);
+			graphics.item(stack, scaledIconX, scaledY);
+			graphics.itemDecorations(client.font, stack, scaledIconX, scaledY);
 		} else {
 			// Draw item without bar
-			context.item(stack, scaledIconX, scaledY);
+			graphics.item(stack, scaledIconX, scaledY);
 		}
 
 		// Don't render durability text if hidden or item isn't damageable
@@ -224,10 +224,10 @@ public class JustArmourClient implements ClientModInitializer {
 
 			int textY = scaledY + 5;
 
-			context.text(client.font, text, textX, textY, color, config.showShadow);
+			graphics.text(client.font, text, textX, textY, color, config.showShadow);
 		}
 
-		context.pose().popMatrix();
+		graphics.pose().popMatrix();
 	}
 
 	public static void loadConfig() {
